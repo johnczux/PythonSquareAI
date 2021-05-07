@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+pygame.init()
 game_size = (1400, 800)
 
 Player_Color = [0,255,0]
@@ -56,7 +57,7 @@ def update():
 
     Player_X += VelocityX * speed * delta
     Player_Y += VelocityY * speed * delta
-     
+    print(clock.get_fps())
     screen.fill((0,0,0))
     pygame.draw.rect(screen, Player_Color, (int(Player_X), int(Player_Y), Player_Size, Player_Size))
     pygame.display.update()
