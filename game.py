@@ -13,9 +13,17 @@ acceleration = 4
 VelocityX = 0
 VelocityY = 0
 screen = pygame.display.set_mode(game_size)
-
+TTScore = "0"
 InputX =0
 InputY =0
+
+font = pygame.font.SysFont(None, 24)
+
+
+Total = font.render("Total Score:", True, (255,255,255)) 
+TotalScore = font.render(TTScore, True, (255,255,255)) 
+
+
 
 game_over = False
 pygame.key.set_repeat(5,10)
@@ -50,6 +58,7 @@ drawGoalLines()
 drawTrack()
 #16ms = about 60 fps ( to get formula is 1 / fps amount * 1000)
 pygame.time.set_timer(1, 16)
+pygame.time.set_timer(2, 1000)
 
 def lerp (starting, destination, tic_time):
     return (float(1) - tic_time) * starting + tic_time * destination
@@ -60,12 +69,14 @@ def reset() :
     global InputX 
     global InputY
     global goalLines
+    global TTScore
 
     goalLines = [[[200,200],[200,50]],[[400,200],[400,50]],[[600,200],[600,50]],[[800,200],[800,50]],[[1000,200],[1000,50]],[[1200,300],[1200,150]],[[1200,400],[1385,400]]
 ,[[1100,550],[1360,550]],[[900,570],[900,710]],[[700,585],[700,720]],[[500,600],[500,730]],[[300,620],[300,740]],[[200,625],[50,750]],[[200,550],[50,550]],[[200,350],[50,350]] ]
     
     InputX = 0
     InputY = 0
+    TTScore = "0"
     Player_X = 100
     Player_Y = 100
     drawGoalLines()
@@ -78,7 +89,7 @@ def update():
     global InputY
     global Player_X
     global Player_Y
-
+    global TTScore
     
 
     keys = pygame.key.get_pressed()
@@ -98,18 +109,22 @@ def update():
     VelocityX = InputX
     VelocityY = InputY
 
-    
+    TotalScore = font.render(TTScore, True, (255,255,255)) 
 
     Player_X += VelocityX * speed * delta
     Player_Y += VelocityY * speed * delta
     screen.fill((0,0,0))
     screen.blit(overlay, (0,0))
+    screen.blit(Total , (1100,50))
+    screen.blit(TotalScore, (1250,50))
+
     player = pygame.draw.rect(screen, Player_Color, (int(Player_X), int(Player_Y), Player_Size, Player_Size))
 
     for line in goalLines :
         if player.clipline(line[0], line[1]):
             del goalLines[0]
             overlay.fill((0,0,0))
+            TTScore = str(int(TTScore) + 30)
             drawGoalLines()
             drawTrack()
 
@@ -121,17 +136,22 @@ def update():
         if player.clipline(insideWall[0], insideWall[1]):
             reset()
 
-
+    if player.clipline((200,200) , (50,200)) :
+        if goalLines.count == 0 :
+            reset()
+        else :
+            reset()
 
 
     pygame.display.update()
-
 
 
 while not game_over:
     for event in pygame.event.get():
         if event.type == 1:
             update()
+        if event.type == 2:
+             TTScore = str(int(TTScore) - 10)
         if event.type == pygame.QUIT:
             sys.exit()
       
