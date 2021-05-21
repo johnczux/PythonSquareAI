@@ -1,5 +1,7 @@
 import pygame
 import sys
+import numpy
+import math
 
 pygame.init()
 game_size = (1400, 800)
@@ -14,8 +16,13 @@ VelocityX = 0
 VelocityY = 0
 screen = pygame.display.set_mode(game_size)
 TTScore = "0"
+highest1 = "0"
+highest2 = "0"
+highest3 = "0"
+highest4 = "0"
 InputX =0
 InputY =0
+
 
 font = pygame.font.SysFont(None, 24)
 
@@ -33,10 +40,9 @@ overlay = pygame.surface.Surface((1400,800))
 # Make a 2D array with tuples for xy and xy2.
 # For loop draw all the lines draw them
 
-outsideBarrier = [[[50,50],[1000,50]],[[1000,50],[1300,200]],[[1300,200],[1380,350]],[[1380,350],[1390,450]],[[1390,450],[1360,550]],[[1360,550],[1300,600]] 
-,[[1300,600],[1200,650]],[[1200,650],[1100,700]],[[1100,700],[50,750]],[[50,750],[50,50]]]
+BarrierLines = [[[50,50],[1000,50]],[[1000,50],[1300,200]],[[1300,200],[1380,350]],[[1380,350],[1390,450]],[[1390,450],[1360,550]],[[1360,550],[1300,600]] 
+,[[1300,600],[1200,650]],[[1200,650],[1100,700]],[[1100,700],[50,750]],[[50,750],[50,50]],[[200,200],[1000,200]],[[1000,200],[1200,300]],[[1200,300],[1200,475]],[[1200,475],[1100,550]],[[1100,550],[200,625]],[[200,625],[200,200]]]
 
-insideBarrier = [[[200,200],[1000,200]],[[1000,200],[1200,300]],[[1200,300],[1200,475]],[[1200,475],[1100,550]],[[1100,550],[200,625]],[[200,625],[200,200]] ]
 
 goalLines = [[[200,200],[200,50]],[[400,200],[400,50]],[[600,200],[600,50]],[[800,200],[800,50]],[[1000,200],[1000,50]],[[1200,300],[1200,150]],[[1200,400],[1385,400]]
 ,[[1100,550],[1360,550]],[[900,570],[900,710]],[[700,585],[700,720]],[[500,600],[500,730]],[[300,620],[300,740]],[[200,625],[50,750]],[[200,550],[50,550]],[[200,350],[50,350]] ]
@@ -48,10 +54,9 @@ def drawGoalLines():
 
 
 def drawTrack():
-    for outsideWall in outsideBarrier :
-        pygame.draw.line(overlay, (255,255,255), outsideWall[0] , outsideWall[1], 3)
-    for insideWall in insideBarrier :
-        pygame.draw.line(overlay, (255,255,255), insideWall[0] , insideWall[1], 3)
+    for walls in BarrierLines :
+        pygame.draw.line(overlay, (255,255,255), walls[0] , walls[1], 3)
+
 
 
 drawGoalLines()
@@ -90,7 +95,10 @@ def update():
     global Player_X
     global Player_Y
     global TTScore
-    
+    highest1 = "0"
+    highest2 = "0"
+    highest3 = "0"
+    highest4 = "0"
 
     keys = pygame.key.get_pressed()
 
@@ -111,6 +119,7 @@ def update():
 
     TotalScore = font.render(TTScore, True, (255,255,255)) 
 
+
     Player_X += VelocityX * speed * delta
     Player_Y += VelocityY * speed * delta
     screen.fill((0,0,0))
@@ -118,7 +127,16 @@ def update():
     screen.blit(Total , (1100,50))
     screen.blit(TotalScore, (1250,50))
 
+ 
+    
+
     player = pygame.draw.rect(screen, Player_Color, (int(Player_X), int(Player_Y), Player_Size, Player_Size))
+    wisker1 = pygame.draw.line(screen, (0,0,255), (int(Player_X)+25,int(Player_Y)+25) ,( int(Player_X)+25,int(Player_Y)+700 ) , 3)
+    wisker2 =pygame.draw.line(screen, (0,0,255), (int(Player_X)+25,int(Player_Y)+25) ,( int(Player_X)+25,int(Player_Y)-700 ) , 3)
+    wisker3 = pygame.draw.line(screen, (0,0,255), (int(Player_X)+25,int(Player_Y)+25) ,( int(Player_X)+1200,int(Player_Y)+25 ) , 3)
+    wisker4 = pygame.draw.line(screen, (0,0,255), (int(Player_X)+25,int(Player_Y)+25) ,( int(Player_X)-1200,int(Player_Y)+25 ) , 3)
+
+
 
     for line in goalLines :
         if player.clipline(line[0], line[1]):
@@ -128,13 +146,61 @@ def update():
             drawGoalLines()
             drawTrack()
 
-    for outsideWall in outsideBarrier :
-        if player.clipline(outsideWall[0], outsideWall[1]):
-            reset()
+    array1 = []
+    array2 = []
+    array3 = []
+    array4 = []
 
-    for insideWall in insideBarrier :
-        if player.clipline(insideWall[0], insideWall[1]):
+    for walls in BarrierLines :
+        if(wisker1.clipline(walls[0], walls[1])) :
+            array1.append(walls)
+        if(wisker2.clipline(walls[0], walls[1])) :
+            array2.append(walls)
+        if(wisker3.clipline(walls[0], walls[1])) :
+            array3.append(walls)
+        if(wisker4.clipline(walls[0], walls[1])) :
+            array4.append(walls)
+        if player.clipline(walls[0], walls[1]):
             reset()
+    #make sure to subtract final results by 20 because of square      
+
+
+    for items in array1 :
+        value = (((numpy.subtract( (wisker1.clipline(items[0], items[1])), ((int(Player_X)+25,int(Player_Y)+25))).tolist() ))[0])[1]
+        if highest1 == "0" :
+            highest1 = str(value - 25)
+        elif value < int(highest1) :
+            highest1 = str(value - 25)
+    for items in array2 :
+        value = (((numpy.subtract(((int(Player_X)+25,int(Player_Y)+25)) ,(wisker2.clipline(items[0], items[1])) ).tolist() ))[0])[1]
+        if highest2 == "0" :
+            highest2 = str(int(value) - 25)
+        elif value < int(highest2) :
+            highest2 = str(int(value) - 25)
+    for items in array3 :
+        value = (((numpy.subtract( (wisker3.clipline(items[0], items[1])), ((int(Player_X)+25,int(Player_Y)+25))).tolist() ))[0])[0]
+        if highest3 == "0" :
+            highest3 = str(int(value) - 25) 
+        elif value < int(highest3) :
+            highest3 = str(int(value) - 25)
+    for items in array4 :
+        value = (((numpy.subtract(((int(Player_X)+25,int(Player_Y)+25)) ,(wisker4.clipline(items[0], items[1])) ).tolist() ))[0])[0]
+        if highest4 == "0" :
+            highest4 = str(int(value) - 25)
+        elif value < int(highest4) :
+            highest4 = str(int(value) - 25)
+   
+    north = font.render(highest2, True, (255,255,255)) 
+    south = font.render(highest1, True, (255,255,255))
+    east = font.render(highest3, True, (255,255,255))
+    west = font.render(highest4, True, (255,255,255))
+    screen.blit(north, (750,400))
+    screen.blit(south, (750,450))
+    screen.blit(east, (750,500))
+    screen.blit(west, (750,550))
+    
+    #print(highest5 -25)
+
 
     if player.clipline((200,200) , (50,200)) :
         if goalLines.count == 0 :
